@@ -1370,35 +1370,67 @@ process.on('unhandledRejection', (err) => logFatal(err, 'unhandledRejection'));
 // Bound to 127.0.0.1 explicitly so the server can NEVER be reached from the LAN —
 // every byte stays on the user's machine, which the privacy promise depends on.
 let activeServer = null;
-function startServer(port) {
-  const server = app.listen(port, '127.0.0.1', () => {
-    activeServer = server;
-    // Persist the chosen port — the .bat launcher reads this for the browser URL.
-    // Writing on EVERY successful boot means: if our preferred 47371 was busy and
-    // we landed on 47372 instead, next launch tries 47372 first (cuts collision
-    // scans in half on repeated reboots of whatever was holding 47371).
-    try { fs.writeFileSync(PORT_FILE, String(port), 'utf-8'); } catch { /* ignore */ }
-    console.log(`\n  Free GST Billing Software running at http://localhost:${port}`);
-    console.log(`  Data stored in: ${DATA_DIR}\n`);
-  });
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE' && port < STARTING_PORT + MAX_PORT_SCAN) {
-      console.log(`  Port ${port} is busy, trying ${port + 1}...`);
-      startServer(port + 1);
-    } else if (err.code === 'EADDRINUSE') {
-      // We've exhausted the scan range. Tell the OS to pick anything free — at
-      // this point the user has 50+ apps fighting for the 47371-47421 range,
-      // which we treat as "do whatever works" rather than failing to start.
-      console.warn(`  Scanned ${MAX_PORT_SCAN} ports from ${STARTING_PORT} — letting OS assign a free one.`);
-      startServer(0);
-    } else {
-      console.error(`  Failed to start server: ${err.message}`);
-      // Persist the failure so the user has a breadcrumb when the silent
-      // launcher exits without any visible window.
-      logFatal(err, 'startup');
-      process.exit(1);
-    }
-  });
+module.exports = app;
+// function startServer(port) {
+//   const server = app.listen(port, '127.0.0.1', () => {
+//     activeServer = server;
+//     // Persist the chosen port — the .bat launcher reads this for the browser URL.
+//     // Writing on EVERY successful boot means: if our preferred 47371 was busy and
+//     // we landed on 47372 instead, next launch tries 47372 first (cuts collision
+//     // scans in half on repeated reboots of whatever was holding 47371).
+//     try { fs.writeFileSync(PORT_FILE, String(port), 'utf-8'); } catch { /* ignore */ }
+//     console.log(`\n  Free GST Billing Software running at http://localhost:${port}`);
+//     console.log(`  Data stored in: ${DATA_DIR}\n`);
+//   });
+//   server.on('error', (err) => {
+//     if (err.code === 'EADDRINUSE' && port < STARTING_PORT + MAX_PORT_SCAN) {
+//       console.log(`  Port ${port} is busy, trying ${port + 1}...`);
+//       startServer(port + 1);
+//     } else if (err.code === 'EADDRINUSE') {
+//       // We've exhausted the scan range. Tell the OS to pick anything free — at
+//       // this point the user has 50+ apps fighting for the 47371-47421 range,
+//       // which we treat as "do whatever works" rather than failing to start.
+//       console.warn(`  Scanned ${MAX_PORT_SCAN} ports from ${STARTING_PORT} — letting OS assign a free one.`);
+//       startServer(0);
+//     } else {
+//       console.error(`  Failed to start server: ${err.message}`);
+//       // Persist the failure so the user has a breadcrumb when the silent
+//       // launcher exits without any visible window.
+//       logFatal(err, 'startup');
+//       process.exit(1);
+//     }
+//   });
+// }
+
+// Only run local port scanning and app.listen if NOT running on Vercel
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  const STARTING_PORT = 47371;
+  const MAX_PORT_SCAN = 50;
+
+  function startServer(port) {
+    const server = app.listen(port, '127.0.0.1', () => {
+      try { 
+        fs.writeFileSync(PORT_FILE, String(port), 'utf-8'); 
+      } catch { /* ignore */ }
+      console.log(`\n  Free GST Billing Software running at http://localhost:${port}`);
+      console.log(`  Data stored in: ${DATA_DIR}\n`);
+    });
+
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE' && port < STARTING_PORT + MAX_PORT_SCAN) {
+        console.log(`  Port ${port} is busy, trying ${port + 1}...`);
+        startServer(port + 1);
+      } else if (err.code === 'EADDRINUSE') {
+        console.warn(`  Scanned range exhausted — letting OS assign a free one.`);
+        startServer(0);
+      } else {
+        console.error(`  Failed to start server: ${err.message}`);
+        process.exit(1);
+      }
+    });
+  }
+
+  startServer(STARTING_PORT);
 }
 
 // Graceful shutdown — taskkill /f from Stop FreeGSTBill.bat can interrupt a
