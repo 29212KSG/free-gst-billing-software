@@ -635,35 +635,35 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [showPalette, paletteIdx, filteredPalette]);
 
-  if (serverDown) {
-    return (
-      <div className="server-down-overlay">
-        <div className="server-down-modal">
-          <FileText size={48} color="#3b82f6" />
-          <h2>Free GST Billing Software Needs a Quick Start</h2>
-          <p>
-            Your data is <strong>100% safe</strong> on your computer — nothing is lost.
-            The app just needs to be started once.
-          </p>
-          <a href="freegstbill://start" className="server-start-btn">
-            Open GST Billing
-          </a>
-          <div className="server-down-steps">
-            <p className="server-down-hint">Or start manually:</p>
-            <ol>
-              <li>Double-click <strong>Free GST Billing Software</strong> on your Desktop</li>
-              <li>Or search <strong>"Free GST Billing"</strong> in Start Menu</li>
-            </ol>
-          </div>
-          <p className="server-down-safe">All your invoices, clients, and data are safely stored on your computer. They are never deleted or shared.</p>
-          <div className="server-down-waiting">
-            <div className="server-down-spinner" />
-            <span>Starting... this page will open automatically.</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (serverDown) {
+  //   return (
+  //     <div className="server-down-overlay">
+  //       <div className="server-down-modal">
+  //         <FileText size={48} color="#3b82f6" />
+  //         <h2>Free GST Billing Software Needs a Quick Start</h2>
+  //         <p>
+  //           Your data is <strong>100% safe</strong> on your computer — nothing is lost.
+  //           The app just needs to be started once.
+  //         </p>
+  //         <a href="freegstbill://start" className="server-start-btn">
+  //           Open GST Billing
+  //         </a>
+  //         <div className="server-down-steps">
+  //           <p className="server-down-hint">Or start manually:</p>
+  //           <ol>
+  //             <li>Double-click <strong>Free GST Billing Software</strong> on your Desktop</li>
+  //             <li>Or search <strong>"Free GST Billing"</strong> in Start Menu</li>
+  //           </ol>
+  //         </div>
+  //         <p className="server-down-safe">All your invoices, clients, and data are safely stored on your computer. They are never deleted or shared.</p>
+  //         <div className="server-down-waiting">
+  //           <div className="server-down-spinner" />
+  //           <span>Starting... this page will open automatically.</span>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (showWelcome) {
     return (
